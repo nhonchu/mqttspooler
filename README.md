@@ -46,10 +46,10 @@ Prerequisite
 Before your device application can exchange MQTT data with Sierra Wireless AirVantage server, the following must be performed:<br>
 1. Have an account on [AirVantage server](https://eu.airvantage.net/) and apply the following steps.<br>
 2. Register your system/device, refer to [How-To](), *Getting started with HL Module*, step 1.<br>
-*If you don't have IMEI (e.g. not using 2G/3G/4G module), provide a serial number when creating a gateway*.<br>
+    * If you don't have IMEI (e.g. not using 2G/3G/4G module), provide a serial number when creating a gateway.
 3. Create the counterpart server-side application on AirVantage, refer to [How-To](), *Getting started with HL Module*, step 2.
-A sample application model is provided in appModel directory.<br>
-*If serial number is used, change the *protocol comm-id* from IMEI to SERIAL, in the XML application model*.<br>
+    * A sample application model is provided in appModel directory.
+    * If serial number is used, change the *protocol comm-id* from IMEI to SERIAL, in the XML application model.
 4. Associate the server-side application to your device and assign a password. refer to [How-To](), *Getting started with HL Module*, step 2.<br>
 5. Your device/system must have an internet access (e.g. cellular, WiFi, ethernet...) with port 1883 not being blocked.<br>
 
