@@ -29,7 +29,7 @@ kitchen.temperature;21;<br>
 kitchen.humidity;60;<br>
 
 MQTTspooler will automatically detect your CSV files, parse them, convert CSV entries to JSON format prior publishing them to AirVantage server.
-Posted data can then be visualized on Sierra Wireless AirVantage web portal or collected by your server through WebAPI. Refer to doc.airvantage.net for further information.
+Posted data can then be visualized on Sierra Wireless AirVantage web portal or collected by your server through WebAPI. Refer to [here]() for further information.
 <br>
 <br>
 You can have AirVantage server to send data, over MQTT, to your device application. e.g. perform remote actions on your actuators.
