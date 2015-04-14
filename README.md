@@ -16,8 +16,8 @@ MQTTspooler, written in C language, has been tested on RaspberryPI, PC/Ubuntu, M
 CSV Interface Format
 --------------------
 Key;Value;OptionalTimestamp
-<dd>*where OptionalTimestamp is the number of elapsed seconds since Jan 1st 1970*<br>
-<dd>*if OptionalTimestamp is ommited then MQTTspooler will provide the current timestamp*
+<dd>*where OptionalTimestamp is the number of elapsed seconds since Jan 1st 1970*.<br>
+<dd>*if OptionalTimestamp is ommited then MQTTspooler will provide the current timestamp.*
 
 Use Case Example
 ----------------
@@ -44,14 +44,14 @@ Your device application just needs to parse CSV files to extract trigger command
 Prerequisite
 ------------
 Before your device application can exchange MQTT data with Sierra Wireless AirVantage server, the following must be performed:<br>
-1. Have an account on [AirVantage server](https://eu.airvantage.net/) and apply the following steps<br>
+1. Have an account on [AirVantage server](https://eu.airvantage.net/) and apply the following steps.<br>
 2. Register your system/device, refer to [How-To](), *Getting started with HL Module*, step 1.<br>
-*If you don't have IMEI (e.g. not using 2G/3G/4G module), provide a serial number when creating a gateway*<br>
+*If you don't have IMEI (e.g. not using 2G/3G/4G module), provide a serial number when creating a gateway*.<br>
 3. Create the counterpart server-side application on AirVantage, refer to [How-To](), *Getting started with HL Module*, step 2.
-A sample application model is provided in appModel directory<br>
-*If serial number is used, change the *protocol comm-id* from IMEI to SERIAL, in the XML application model*<br>
+A sample application model is provided in appModel directory.<br>
+*If serial number is used, change the *protocol comm-id* from IMEI to SERIAL, in the XML application model*.<br>
 4. Associate the server-side application to your device and assign a password. refer to [How-To](), *Getting started with HL Module*, step 2.<br>
-5. Your device/system must have an internet access (e.g. cellular, WiFi, ethernet...) with port 1883 not being blocked<br>
+5. Your device/system must have an internet access (e.g. cellular, WiFi, ethernet...) with port 1883 not being blocked.<br>
 
 Build
 -----
@@ -64,15 +64,15 @@ Run
 ---
 Launching MQTTspooler requires 4 mandatory arguments and 1 optional argument, as follow:
 ~~~
-./mqttspooler *imei password pubFolderName subFolderName pubPeriod*
+./mqttspooler imei password pubFolderName subFolderName pubPeriod
 ~~~
 
 Arguments:
-* imei:				the IMEI or Serial Number as provided in Prerequisite step 2
-* password: 		the password as provided in Prerequisite step 3
-* pubFolderName:	an existing directory in which MQTTspooler will be scanning for CSV files to be published to AirVantage server
-* subFolderName:	an existing directory in which MQTTspooler will be dumping CSV files upon receiving incoming MQTT messages from AirVantage server
-* pubPeriod:		optional argument in number of seconds. Spooling frequency of the pubFolder, default is 30 seconds 
+* imei:				the IMEI or Serial Number as provided in Prerequisite step 2.
+* password: 		the password as provided in Prerequisite step 3.
+* pubFolderName:	an existing directory in which MQTTspooler will be scanning for CSV files to be published to AirVantage server.
+* subFolderName:	an existing directory in which MQTTspooler will be dumping CSV files upon receiving incoming MQTT messages from AirVantage server.
+* pubPeriod:		optional argument in number of seconds. Spooling frequency of the pubFolder, default is 30 seconds.
 
 
 Testing
