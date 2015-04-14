@@ -1,7 +1,7 @@
 MQTT-Spooler
 ============
 
-This tool enables your device application to easily exchange data over MQTT with Sierra Wireless AirVantage server.
+This tool enables your application to easily exchange data over MQTT with Sierra Wireless AirVantage server.
 
 Coding is not require, Generic and Loosely coupled solution through CSV-based file interface:
 
@@ -21,7 +21,7 @@ Key;Value;OptionalTimestamp
 
 Use Case Example
 ----------------
-Your device aggregates data from various sensors, and save the collected data to one or several CSV file(s), for instance:<br>
+Your device application aggregates data from various sensors, and save the collected data to one or several CSV file(s), for instance:<br>
 bedroom.temperature;17;<br>
 bedroom.luminosity;2500;<br>
 livingroom.temperature;20;<br>
@@ -39,11 +39,11 @@ bedroom.TurnOn.Light;true;14301456445<br>
 kitchen.TurnOn.Heater;false;14301456445<br>
 kitchen.TurnOn.Fan;2;14301456445<br>
 
-Your device application just needs to parse CSV files to extract trigger commands or apply particular setting.
+Your application just needs to parse CSV files to extract trigger commands or apply particular setting.
  
 Prerequisite
 ------------
-Before your device application can exchange MQTT data with Sierra Wireless AirVantage server, the following must be performed:
+Before your application can exchange MQTT data with Sierra Wireless AirVantage server, the following must be performed:
 * Have an account on [AirVantage server](https://eu.airvantage.net/) and apply the following steps.
 * Register your system/device, refer to [How-To](), *Getting started with HL Module*, step 1.
     * If you don't have IMEI (e.g. not using 2G/3G/4G module), provide a serial number when creating a gateway.
