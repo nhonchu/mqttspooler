@@ -39,8 +39,7 @@
 
 #include <stdio.h>
 #include "MQTTClient.h"
-#include "json/json_deserializer.h"
-#include "json/json_serializer.h"
+#include "json/swir_json.h"
 
 #include <stdio.h>
 #include <signal.h>
@@ -66,6 +65,8 @@ void 		mqtt_publish(char*, int);
 #define 	URL_AIRVANTAGE_SERVER		"eu.airvantage.net"
 #define 	PORT_AIRVANTAGE_SERVER		1883
 
+#define         AV_JSON_KEY_MAX_COUNT           10
+#define         AV_JSON_KEY_MAX_LENGTH          32
 //#define 	OFFLINE						//no server connection, for debugging purposes
 
 /*---------- Structures definition -------------------*/
@@ -96,6 +97,7 @@ int			g_nDataObjectCount;					//number of genenric variables to be spooled
 
 char		g_szInboundDataFolder[MAX_PATH];	//incoming MQTT messages are converted to CSV then stored in this folder
 
+ST_THREAD1_PARAM	g_stSpoolingThreadParam;
 
 //----------------------------------- Functions ---------------------------------------------------------
 void onExit(int sig)
@@ -278,7 +280,7 @@ void* onSpooling(void *arg)
 			unsigned long*	data_ts = NULL;
 			void*			data = NULL;
 			char**			data_values = NULL;
-			char 			data_payload[MAX_PAYLOAD_SIZE];
+			char* 			data_payload;
 
 			szKey[0] = 0;
 			nCount = 0;
@@ -328,13 +330,15 @@ void* onSpooling(void *arg)
 			}
 			else if ( (strlen(szKey) > 0) && (data != NULL) && (data_ts != NULL) )
 			{
-				json_data(data_payload, szKey, data_ts, data_values, nCount);
+				data_payload = swirjson_lstSerialize(szKey, nCount, data_values, data_ts);
+
 				if (nPayloadCount > 0)
 				{
 					strcat(szPayload, ", ");
 				}
 				strcat(szPayload, data_payload);
 				nPayloadCount++;
+                                free(data_payload);
 			}
 
 			if (data_ts)
@@ -419,47 +423,50 @@ void* onSpooling(void *arg)
 }
 
 //-------------------------------------------------------------------------------------------------------
-void convertDataToCSV(mqtt_data_t data)
+char* createFile()
+{
+	char*	szFilename = (char*) malloc(MAX_PATH);
+
+	memset(szFilename, 0, MAX_PATH);
+
+	time_t 		stime = time(NULL);
+	struct tm*	ptm;
+	char		szName[32];
+
+	ptm = localtime(&stime);
+
+	sprintf(szName, "data-%d%02d%02d-%02d%02d%02d",
+			1900+ptm->tm_year,
+			ptm->tm_mon+1,
+			ptm->tm_mday,
+			ptm->tm_hour,
+			ptm->tm_min,
+			ptm->tm_sec);
+
+	int 	index = 0;
+	
+	do
+	{
+		sprintf(szFilename, "%s/%s-%02d.csv", g_szInboundDataFolder, szName, index++);
+
+	} while (access(szFilename, F_OK) == 0);
+
+	return szFilename;
+}
+
+//-------------------------------------------------------------------------------------------------------
+void convertDataToCSV(char* szFilename, char* szKeyPath, char* szKey, char* szValue, char* szTimestamp)
 {
 	/*
 		This function converts the provided JSON-decoded data (from MQTT payload) to CSV data (key;value;timestamp)
 		Then saves the CSV data to file in the InboundDataFolder
 	*/
 
-	char	szFilename[MAX_PATH];
-
-	{
-		time_t 		stime = time(NULL);
-		struct tm*	ptm;
-		char		szName[32];
-
-		ptm = localtime(&stime);
-
-		sprintf(szName, "data-%d%02d%02d-%02d%02d%02d",
-				1900+ptm->tm_year,
-				ptm->tm_mon+1,
-				ptm->tm_mday,
-				ptm->tm_hour,
-				ptm->tm_min,
-				ptm->tm_sec);
-
-		int 	index = 0;
-		
-		do
-		{
-			sprintf(szFilename, "%s/%s-%02d.csv", g_szInboundDataFolder, szName, index++);
-
-		} while (access(szFilename, F_OK) == 0);
-
-	}
-
-	printf("uid:%s : Saving %d data object to %s file...\n", data.ticketId, (int)data.nbofvalues, szFilename);
-	fflush(stdout);
-
 	FILE*	file = NULL;
 	char	szLine[MAX_PAYLOAD_SIZE];
 
-	file = fopen(szFilename,"w");
+	file = fopen(szFilename,"a");
+	fseek(file, 0, SEEK_END);
 
 	if (file == NULL)
 	{
@@ -469,19 +476,15 @@ void convertDataToCSV(mqtt_data_t data)
 		return;
 	}
 
-	int i;
-	for (i=0; i < data.nbofvalues; i++)
-	{
-		sprintf(szLine, "%s.%s;%s;%s\n", data.path, data.keys[i], data.values[i].content.string.data, data.timestamp);
-		printf("%s", szLine);
-		fflush(stdout);
+	sprintf(szLine, ">> %s.%s;%s;%s... saved to file %s\n", szKeyPath, szKey, szValue, szTimestamp, szFilename);
+	printf("%s", szLine);
+	fflush(stdout);
 
-		if (strlen(szLine) != fwrite(szLine, 1, strlen(szLine), file))
-		{
-			printf("Failed to write to file %s\n", szFilename);
-			perror("Error: ");
-			fflush(stdout);
-		}
+	if (strlen(szLine) != fwrite(szLine, 1, strlen(szLine), file))
+	{
+		printf("Failed to write to file %s\n", szFilename);
+		perror("Error: ");
+		fflush(stdout);
 	}
 
 	fclose(file);
@@ -499,16 +502,63 @@ void onIncomingMessage(MessageData* md)
 
 	MQTTMessage* message = md->message;
 
-	printf("\nIncoming data:\n%.*s%s", (int)message->payloadlen, (char*)message->payload, " ");
+	printf("\nIncoming data:\n%.*s%s\n", (int)message->payloadlen, (char*)message->payload, " ");
 
-	char payload[MAX_PAYLOAD_SIZE];
-	sprintf(payload, "%.*s%s", (int)message->payloadlen, (char*)message->payload, " ");
+	char szPayload[MAX_PAYLOAD_SIZE];
+	
+	memcpy(szPayload, (char*)message->payload, message->payloadlen);
+	szPayload[message->payloadlen] = 0;
 
-	mqtt_data_t data = json_deserialize(payload);
+	//decode JSON payload
 
-	convertDataToCSV(data);
+	char* pszCommand = swirjson_getValue(szPayload, -1, "command");
+	if (pszCommand)
+	{
+		char*	pszTimestamp = swirjson_getValue(szPayload, -1, "timestamp");
+		char*	pszId = swirjson_getValue(pszCommand, -1, "id");
+		char*	pszParam = swirjson_getValue(pszCommand, -1, "params");
 
-	json_free(data);
+		char*	pszFilename = createFile();
+                int     i;
+
+		for (i=0; i<AV_JSON_KEY_MAX_COUNT; i++)
+		{
+			char szKey[AV_JSON_KEY_MAX_LENGTH];
+
+			char * pszValue = swirjson_getValue(pszParam, i, szKey);
+
+			if (pszValue)
+			{
+				convertDataToCSV(pszFilename, pszId, szKey, pszValue, pszTimestamp);
+				free(pszValue);
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		if (pszFilename)
+		{
+			free(pszFilename);
+		}
+
+		free(pszCommand);
+
+		if (pszId)
+		{
+			free(pszId);
+		}
+		if (pszParam)
+		{
+			free(pszParam);
+		}
+		if (pszTimestamp)
+		{
+			free(pszTimestamp);
+		}
+	}
+
 
 	fflush(stdout);
 }
@@ -611,10 +661,9 @@ int main(int argc, char** argv)
 	fflush(stdout);
 
 #endif
-	ST_THREAD1_PARAM	stSpoolingThreadParam;
 
-	stSpoolingThreadParam.pMqttClient = &mqttClient;
-	strcpy(stSpoolingThreadParam.szOutboundDataFolder, argv[3]);
+	g_stSpoolingThreadParam.pMqttClient = &mqttClient;
+	strcpy(g_stSpoolingThreadParam.szOutboundDataFolder, argv[3]);
 
 	strcpy(g_szInboundDataFolder, argv[4]);
 
@@ -623,7 +672,7 @@ int main(int argc, char** argv)
 		g_SpoolingFrequency = atol(argv[5]);
 	}
 
-	int err = pthread_create(&pSpoolerThread, NULL, &onSpooling, (void*) &stSpoolingThreadParam);
+	int err = pthread_create(&pSpoolerThread, NULL, &onSpooling, (void*) &g_stSpoolingThreadParam);
 
 	if (err != 0)
 	{
