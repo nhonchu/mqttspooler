@@ -29,7 +29,7 @@ kitchen.temperature;21;<br>
 kitchen.humidity;60;<br>
 
 MQTTspooler will automatically detect your CSV files, parse them, convert CSV entries to JSON format prior publishing them to AirVantage server.
-Posted data can then be visualized on Sierra Wireless AirVantage web portal or collected by your server through WebAPI. Refer to [here]() for further information.
+Posted data can then be visualized on Sierra Wireless AirVantage web portal or collected by your server through WebAPI.
 <br>
 <br>
 You can have AirVantage server to send data, over MQTT, to your device application. e.g. perform remote actions on your actuators.
@@ -45,12 +45,12 @@ Prerequisite
 ------------
 Before your application can exchange MQTT data with Sierra Wireless AirVantage server, the following must be performed:
 * Have an account on [AirVantage server](https://eu.airvantage.net/) and apply the following steps.
-* Register your system/device, refer to [How-To](), *Getting started with HL Module*, step 1.
+* Register your system/device, refer to [How-To](https://doc.airvantage.net/av/howto/hardware/samples/hl-mqtt-devkit), *Getting started with HL Module*, step 1.
     * If you don't have IMEI (e.g. not using 2G/3G/4G module), provide a serial number when creating a gateway.
-* Create the counterpart server-side application on AirVantage, refer to [How-To](), *Getting started with HL Module*, step 2.
+* Create the counterpart server-side application on AirVantage, refer to [How-To](https://doc.airvantage.net/av/howto/hardware/samples/hl-mqtt-devkit), *Getting started with HL Module*, step 2.
     * A sample application model is provided in appModel directory.
     * If serial number is used, change the __protocol comm-id__ from IMEI to SERIAL, in the XML application model.
-* Associate the server-side application to your device and assign a password. refer to [How-To](), *Getting started with HL Module*, step 2.
+* Associate the server-side application to your device and assign a password. refer to [How-To](https://doc.airvantage.net/av/howto/hardware/samples/hl-mqtt-devkit), *Getting started with HL Module*, step 2.
 * Your device/system must have an internet access (e.g. cellular, WiFi, ethernet...) with port 1883 not being blocked.
 
 Build
@@ -83,7 +83,7 @@ cd pubFolderName
 echo "bedroom.temperature;17;" >> sensor.txt
 ~~~
 
-To test the incoming MQTT messages, refer to [How-To](), *Getting started with HL Module*, step 3, to send message from AirVantage server.
+To test the incoming MQTT messages, refer to [How-To](https://doc.airvantage.net/av/howto/hardware/samples/hl-mqtt-devkit), *Getting started with HL Module*, step 3, to send message from AirVantage server.
 Once MQTT messages are received, simply check for them as follow:
 ~~~
 cd ../subFolderName

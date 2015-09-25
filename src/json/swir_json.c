@@ -37,11 +37,13 @@ char* swirjson_szSerialize(char* szKey, char* szValue, unsigned long ulTimestamp
 	if (ulTimestamp == 0)
 	{
 		//sprintf(szPayload, "[{\"%s\": [{\"timestamp\" : 1426939843000, \"value\" : \"%s\"}]}]", szKey, szValue);
-		sprintf(szPayload, "[{\"%s\": [{\"timestamp\" : \"\", \"value\" : \"%s\"}]}]", szKey, szValue);
+		//sprintf(szPayload, "[{\"%s\": [{\"timestamp\" : \"\", \"value\" : \"%s\"}]}]", szKey, szValue);
+		sprintf(szPayload, "{\"%s\":%s}", szKey, szValue);	
 	}
 	else
 	{
-		sprintf(szPayload, "[{\"%s\": [{\"timestamp\" : %lu, \"value\" : \"%s\"}]}]", szKey, ulTimestamp, szValue);
+		//sprintf(szPayload, "[{\"%s\": [{\"timestamp\" : %lu, \"value\" : \"%s\"}]}]", szKey, ulTimestamp, szValue);
+		sprintf(szPayload, "{\"%lu\":{\"%s\":%s}}", ulTimestamp, szKey, szValue);
 	}
 
 	char*	pszJson = (char*) malloc(strlen(szPayload)+1);

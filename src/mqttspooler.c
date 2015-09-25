@@ -62,6 +62,7 @@ void 		mqtt_publish(char*, int);
 #define 	SPOOLING_FREQUENCY_SECOND	30		//Spool for CSV every 30 seconds by default
 #define 	TOPIC_NAME_PUBLISH			"/messages/json"
 #define 	TOPIC_NAME_SUBSCRIBE		"/tasks/json"
+#define 	TOPIC_NAME_ACK				"/acks/json"
 #define 	URL_AIRVANTAGE_SERVER		"eu.airvantage.net"
 #define 	PORT_AIRVANTAGE_SERVER		1883
 
@@ -423,6 +424,64 @@ void* onSpooling(void *arg)
 }
 
 //-------------------------------------------------------------------------------------------------------
+int publishAckCmd(const char* szUid, int nAck, char* szMessage)
+{
+ 	char* szPayload = (char*) malloc(strlen(szUid)+strlen(szMessage)+48);
+
+	if (nAck == 0)
+	{
+		sprintf(szPayload, "[{\"uid\": \"%s\", \"status\" : \"OK\"", szUid);
+	}
+	else
+	{
+		sprintf(szPayload, "[{\"uid\": \"%s\", \"status\" : \"ERROR\"", szUid);
+	}
+
+	if (strlen(szMessage) > 0)
+	{
+		sprintf(szPayload, "%s, \"message\" : \"%s\"}]", szPayload, szMessage);
+	}
+	else
+	{
+		sprintf(szPayload, "%s}]", szPayload);
+	}
+
+	printf("[ACK Message] %s\n", szPayload);
+
+	MQTTMessage		msg;
+	msg.qos = QOS0;
+	msg.retained = 0;
+	msg.dup = 0;
+	msg.id = 0;
+	msg.payload = szPayload;
+	msg.payloadlen = strlen(szPayload);
+
+	char* pTopic = malloc(strlen(TOPIC_NAME_ACK) + strlen(g_szDeviceId) + 1);
+	sprintf(pTopic, "%s%s", g_szDeviceId, TOPIC_NAME_ACK);
+	printf("Publish on %s\n", pTopic);
+	fflush(stdout);
+#ifndef OFFLINE
+	Client*				mqttClient = (Client*) g_stSpoolingThreadParam.pMqttClient;
+	int rc = MQTTPublish(mqttClient, pTopic, &msg);
+	if (rc != 0)
+	{
+		printf("publish error: %d\n", rc);
+		fflush(stdout);
+	}
+#endif
+	if (pTopic)
+	{
+		free(pTopic);
+	}
+	if (szPayload)
+	{
+		free(szPayload);
+	}
+
+	return rc;
+}
+
+//-------------------------------------------------------------------------------------------------------
 char* createFile()
 {
 	char*	szFilename = (char*) malloc(MAX_PATH);
@@ -480,6 +539,8 @@ void convertDataToCSV(char* szFilename, char* szKeyPath, char* szKey, char* szVa
 	printf("%s", szLine);
 	fflush(stdout);
 
+	sprintf(szLine, "%s.%s;%s;%s\n", szKeyPath, szKey, szValue, szTimestamp);
+	
 	if (strlen(szLine) != fwrite(szLine, 1, strlen(szLine), file))
 	{
 		printf("Failed to write to file %s\n", szFilename);
@@ -504,8 +565,8 @@ void onIncomingMessage(MessageData* md)
 
 	printf("\nIncoming data:\n%.*s%s\n", (int)message->payloadlen, (char*)message->payload, " ");
 
-	char szPayload[MAX_PAYLOAD_SIZE];
-	
+	char* szPayload = (char *) malloc(message->payloadlen+1);
+
 	memcpy(szPayload, (char*)message->payload, message->payloadlen);
 	szPayload[message->payloadlen] = 0;
 
@@ -514,6 +575,7 @@ void onIncomingMessage(MessageData* md)
 	char* pszCommand = swirjson_getValue(szPayload, -1, "command");
 	if (pszCommand)
 	{
+		char*	pszUid = swirjson_getValue(szPayload, -1, "uid");
 		char*	pszTimestamp = swirjson_getValue(szPayload, -1, "timestamp");
 		char*	pszId = swirjson_getValue(pszCommand, -1, "id");
 		char*	pszParam = swirjson_getValue(pszCommand, -1, "params");
@@ -538,6 +600,8 @@ void onIncomingMessage(MessageData* md)
 			}
 		}
 
+		publishAckCmd(pszUid, 0, "");
+
 		if (pszFilename)
 		{
 			free(pszFilename);
@@ -557,8 +621,16 @@ void onIncomingMessage(MessageData* md)
 		{
 			free(pszTimestamp);
 		}
+		if (pszUid)
+		{
+			free(pszUid);
+		}
 	}
 
+	if (szPayload)
+	{
+		free(szPayload);
+	}
 
 	fflush(stdout);
 }
