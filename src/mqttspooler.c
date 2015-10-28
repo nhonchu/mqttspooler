@@ -695,7 +695,7 @@ int main(int argc, char** argv)
 		data.username.cstring = g_szDeviceId;
 		data.password.cstring = argv[2];
 
-		data.keepAliveInterval = 10000;
+		data.keepAliveInterval = 20;
 		data.cleansession = 1;
 		printf("Attempting (%d/%d) to connect to tcp://%s:%d\n", nRetry+1, nMaxRetry, szServerUrl, nServerPortNumber);
 
