@@ -13,7 +13,7 @@
 
 
 
-char*		swirjson_szSerialize(char* szKey, char* szValue, unsigned long ulTimestamp);
+char*		swirjson_szSerialize(const char* szKey, const char* szValue, unsigned long ulTimestamp);
 char*		swirjson_fSerialize(char* szKey, float fValue, unsigned long ulTimestamp);
 char*		swirjson_nSerialize(char* szKey, int nValue, unsigned long ulTimestamp);
 char*		swirjson_lstSerialize(char* szKey, int nValueCount, char** pszValueList, unsigned long* pulTimestampList);
