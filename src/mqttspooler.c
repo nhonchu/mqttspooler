@@ -175,8 +175,8 @@ int parseData(char* filename)
 					if (ulValue2 == 0)
 					{
 						//no user provided timestamp, use current time by default
-						printf("null timestamp... providing default one\n");
-						ulValue2 = (unsigned long) getTimeStamp();
+						//printf("null timestamp... providing default one\n");
+						//ulValue2 = (unsigned long) getTimeStamp();
 					}
 
 					strcpy(g_astDataObject[g_nDataObjectCount].szName, szKey);
@@ -266,10 +266,13 @@ void* onSpooling(void *arg)
 		//Spool the folder for CSV data files
 		scanOutboundFolder(pstParam->szOutboundDataFolder);
 		
-		strcpy(szPayload, "[");	//start of payload
+		memset(szPayload, 0, sizeof(szPayload));
+
+
 		int nPayloadCount = 0;
 
-#if 1
+#if 0	//Support of Json format2 is broken on server
+		strcpy(szPayload, "[");	//start of payload
 		//Optimized version : JSON collection enabled, variable having the same key are gathered to reduce payload size
 
 		int bDone = 0;
@@ -351,36 +354,36 @@ void* onSpooling(void *arg)
 				free(data);
 			}
 		} while (!bDone);
+		
+		strcat(szPayload, "]");	//end the paylpoad
 #else
 		//None optimized version : No JSON collection
+		strcat(szPayload, "{");
 		int nCount = 0;
 		for (nCount=0; nCount<g_nDataObjectCount; nCount++)
 		{
-			unsigned long	data_ts[2];
-			char*			data_values[2];
-			int 			data_size = 0;
-			char 			data_payload[MAX_PAYLOAD_SIZE];
+			char *			data_payload;
 
 			#if 0
 			printf("preparing custom data %d of %d\n", nCount, g_nDataObjectCount);
 			fflush(stdout);
 			#endif
-			data_ts[data_size] = g_astDataObject[nCount].ulTimeStamp;
-			data_values[data_size] = malloc(strlen(g_astDataObject[nCount].szValue)+1);
-			strcpy(data_values[data_size], g_astDataObject[nCount].szValue);
-			data_size++;
 
-			json_data(data_payload, g_astDataObject[nCount].szName, data_ts, data_values, data_size);
+			data_payload = swirjson_szSerialize(g_astDataObject[nCount].szName, g_astDataObject[nCount].szValue, g_astDataObject[nCount].ulTimeStamp);
+
 			if (nPayloadCount > 0)
 			{
 				strcat(szPayload, ", ");
 			}
 			strcat(szPayload, data_payload);
+			
+			free(data_payload);
+
 			nPayloadCount++;
 		}
+		strcat(szPayload, "}");
 #endif
 
-		strcat(szPayload, "]");	//end the paylpoad
 
 		if ( nPayloadCount > 0 )
 		{

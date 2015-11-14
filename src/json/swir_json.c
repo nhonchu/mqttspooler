@@ -38,12 +38,12 @@ char* swirjson_szSerialize(const char* szKey, const char* szValue, unsigned long
 	{
 		//sprintf(szPayload, "[{\"%s\": [{\"timestamp\" : 1426939843000, \"value\" : \"%s\"}]}]", szKey, szValue);
 		//sprintf(szPayload, "[{\"%s\": [{\"timestamp\" : \"\", \"value\" : \"%s\"}]}]", szKey, szValue);
-		sprintf(szPayload, "{\"%s\":\"%s\"}", szKey, szValue);	
+		sprintf(szPayload, "\"%s\":\"%s\"", szKey, szValue);	
 	}
 	else
 	{
 		//sprintf(szPayload, "[{\"%s\": [{\"timestamp\" : %lu, \"value\" : \"%s\"}]}]", szKey, ulTimestamp, szValue);
-		sprintf(szPayload, "{\"%lu\":{\"%s\":\"%s\"}}", ulTimestamp, szKey, szValue);
+		sprintf(szPayload, "\"%lu000\":{\"%s\":\"%s\"}", ulTimestamp, szKey, szValue);
 	}
 
 	char*	pszJson = (char*) malloc(strlen(szPayload)+1);
@@ -75,32 +75,35 @@ char* swirjson_lstSerialize(char* szKey, int nValueCount, char** pszValueList, u
 {
         char*	szPayload = (char *) malloc(JSON_MAX_PAYLOAD_SIZE);
 
-	memset(szPayload, 0, JSON_MAX_PAYLOAD_SIZE);
+		memset(szPayload, 0, JSON_MAX_PAYLOAD_SIZE);
 
         sprintf(szPayload, "{\"%s\": [", szKey);
 
         int i = 0;
         for (i=0; i<nValueCount; i++)
         {
-                if (pulTimestampList == NULL)
-                {
-                        sprintf(szPayload, "%s {\"timestamp\" : \"\", \"value\" : \"%s\"}", szPayload, pszValueList[i]);
-                }
-                else if (pulTimestampList[i] == 0)
+            if (pulTimestampList == NULL)
+            {
+				sprintf(szPayload, "%s {\"timestamp\" : \"\", \"value\" : \"%s\"}", szPayload, pszValueList[i]);	//format 2, not working
+				//sprintf(szPayload, "{\"%s\":%s}", szKey, szValue);		//format 1
+            }
+            else if (pulTimestampList[i] == 0)
 	        {
-		        sprintf(szPayload, "%s {\"timestamp\" : \"\", \"value\" : \"%s\"}", szPayload, pszValueList[i]);
+		        sprintf(szPayload, "%s {\"timestamp\" : \"\", \"value\" : \"%s\"}", szPayload, pszValueList[i]);	//format 2, not working
+		        //sprintf(szPayload, "{\"%s\":%s}", szKey, szValue);		//format 1
 	        }
 	        else
 	        {
-		        sprintf(szPayload, "%s {\"timestamp\" : %lu, \"value\" : \"%s\"}", szPayload, pulTimestampList[i], pszValueList[i]);
-                }
-                free(pszValueList[i]);
-                
-                if (i < nValueCount-1)
-                {
-                        strcat(szPayload, ",");
-                }
-        }
+	        	sprintf(szPayload, "%s {\"timestamp\" : %lu, \"value\" : \"%s\"}", szPayload, pulTimestampList[i], pszValueList[i]);	//format 2, not working
+	        	//sprintf(szPayload, "{\"%lu\":{\"%s\":%s}}", ulTimestamp, szKey, szValue);		//format 1
+            }
+            free(pszValueList[i]);
+            
+            if (i < nValueCount-1)
+            {
+                strcat(szPayload, ",");
+            }
+    }
 
         strcat(szPayload, "]}");
 
