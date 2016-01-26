@@ -259,7 +259,7 @@ char * swirjson_getValue(char* szJson, int nKeyIndex, char* szSearchKey)
 
 		if (bFound)
 		{
-			if (nValEndPos > nValStartPos)
+			if (nValEndPos >= nValStartPos)
 			{
 				int nLen = nValEndPos - nValStartPos + 1;
 				pszValue = (char *) malloc(nLen + 1);
