@@ -10,7 +10,7 @@
 
 	Launching MQTT Spooler :
 		Mandatory ordered arguments:
-			1. IMEI
+			1. Serial Number
 			2. password (as registered on Airvantage, during Application Model assignment)
 			3. Spooling directory name (outbound), must already exists : CVS to MQTT (for publishing)
 			4. Inbound data directory name, must already exists : Subcribed-topic MQTT incoming message to CSV
@@ -90,7 +90,7 @@ typedef struct
 /*----------- Global variables -----------------------*/
 long		g_SpoolingFrequency = SPOOLING_FREQUENCY_SECOND;		//default spooling frequency
 
-char		g_szDeviceId[] = "00000000B6AF4AFF";	//should hold IMEI
+char		g_szDeviceId[] = "00000000B6AF4AFF";	//should hold Serial Number
 int 		g_toStop = 0;						//set to 1 in onExit() to exit program
 
 DataObject	g_astDataObject[MAX_DATA_COUNT];	//holding generic outbound variables to be spooled
@@ -643,15 +643,15 @@ int main(int argc, char** argv)
 {
 	/*
 		Entry point of MQTTspooler :
-		- Open a MQTT session on AirVantage server, with provided DeviceID (IMEI) and password
+		- Open a MQTT session on AirVantage server, with provided DeviceID (Serial Number) and password
 		- Subscribe to TOPIC_NAME_SUBSCRIBE with a provided callback function to process incoming MQTT message
 		- Launch the background folder scanning function to scan the OutboundDataFolder (spooling thread)
 
 		Mandatory ordered arguments:
-			1. IMEI
+			1. Serial Number
 			2. password (as registered on Airvantage, during Application Model assignment)
-			3. Spooling directory name (outbound) : CVS to MQTT (for publishing)
-			4. Inbound data directory name : Subcribed-topic MQTT incoming message to CSV
+			3. Spooling directory name (outbound): CVS to MQTT (for publishing)
+			4. Inbound data directory name: Subcribed-topic MQTT incoming message to CSV
 		Optional argument (5th):
 			5. Spooling frequency in number of seconds
 	*/
@@ -670,13 +670,13 @@ int main(int argc, char** argv)
 
 	if (argc < 5)
 	{
-		printf("Usage: mqttspooler imei password scanOutboundFolder inboundDataFolder spoolingFrequency\n");
+		printf("Usage: mqttspooler serial password scanOutboundFolder inboundDataFolder spoolingFrequency\n");
 		return 1;
 	}
 
 	g_nDataObjectCount = 0;
 
-	strcpy(g_szDeviceId, argv[1]);	//retrieve IMEI from cmd arg
+	strcpy(g_szDeviceId, argv[1]);	// Retrieve Serial Number from cmd arg
 
 	signal(SIGINT, onExit);
 	signal(SIGTERM, onExit);
